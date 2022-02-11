@@ -1,0 +1,6 @@
+- user bot (not a server bot)
+- able to add token
+- able to support multiple servers
+- on press reaction sends a message to the presser
+- uses user-defined proxy
+
