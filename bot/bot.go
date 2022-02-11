@@ -34,7 +34,12 @@ type User struct {
 	Discriminator string `json:"discriminator"`
 }
 
-func (b *Bot) initialize() *Bot {
+type jsonResponse struct {
+	Message string `json:"message"`
+	Code    int    `json:"code"`
+}
+
+func (b *Bot) Initialize() error {
 	// initialize once per bot
 	// be careful not to initialize same bot with another ip
 	// its best to create token - proxy pairs, make sure ip is sticky
@@ -46,14 +51,14 @@ func (b *Bot) initialize() *Bot {
 	proxy, proxyExists := os.LookupEnv("PROXY")
 	token, tokenExists := os.LookupEnv("TOKEN")
 	if !(proxyExists || tokenExists) {
-		fmt.Errorf("proxy or token missing")
+		return fmt.Errorf("proxy or token missing")
 	}
 	b.Proxy = proxy
 	b.Token = token
 
 	proxyUrl, err := url.Parse("http://" + proxy)
 	if err != nil {
-		fmt.Errorf("could not parse proxy: http://%s", proxy)
+		return fmt.Errorf("could not parse proxy: http://%s", proxy)
 	}
 
 	b.Client = &http.Client{
@@ -82,5 +87,5 @@ func (b *Bot) initialize() *Bot {
 		},
 	}
 
-	return b
+	return nil
 }
