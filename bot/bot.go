@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/andybalholm/brotli"
+	"github.com/fatih/color"
 	"github.com/gorilla/websocket"
 	"github.com/piotrostr/discord-greeter/headers"
 )
@@ -61,6 +62,10 @@ type jsonResponse struct {
 type friendRequest struct {
 	Username string `json:"username"`
 	Discrim  int    `json:"discriminator"`
+}
+
+type invitePayload struct {
+	CaptchaKey string `json:"captcha_key,omitempty"`
 }
 
 func (b *Bot) Initialize() error {
@@ -104,6 +109,99 @@ func (b *Bot) Initialize() error {
 	}
 
 	return nil
+}
+
+func (b *Bot) JoinServer(inviteCode string) error {
+	var solvedKey string
+	var payload invitePayload
+	var err error
+	for i := 0; i < b.Config.MaxRejoinAttempts; i++ {
+		if solvedKey == "" || !b.Config.SolveCaptcha {
+			payload = invitePayload{}
+		} else {
+			payload = invitePayload{
+				CaptchaKey: solvedKey,
+			}
+		}
+		payload, err := json.Marshal(payload)
+		if err != nil {
+			color.Red("error while marshalling payload %v", err)
+			err = fmt.Errorf("error while marshalling payload %v", err)
+			continue
+		}
+		url := "https://discord.com/api/v9/invites/" + inviteCode
+		req, err := http.NewRequest("POST", url, strings.NewReader(string(payload)))
+		if err != nil {
+			color.Red("Error while making http request %v \n", err)
+			continue
+		}
+
+		cookie, err := b.GetCookieString()
+		if err != nil {
+			color.Red("[%v] Error while Getting cookies: %v", err)
+			continue
+		}
+		req.Header.Set("Cookie", cookie)
+		req = headers.Invite(req)
+		resp, err := b.Client.Do(req)
+		if err != nil {
+			color.Red("Error while sending HTTP request %v \n", err)
+			continue
+		}
+
+		body, err := ReadBody(*resp)
+		if err != nil {
+			color.Red("Error while reading body %v \n", err)
+			continue
+		}
+		// TODO finish refactor
+		/*
+
+			if strings.Contains(string(body), "captcha_sitekey") {
+				if in.Config.CaptchaAPI == "" {
+					err = fmt.Errorf("[%v] Captcha detected but no API key provided", time.Now().Format("15:04:05"))
+					break
+				} else {
+					color.Green("[%v] Captcha detected, solving...", time.Now().Format("15:04:05"))
+				}
+				var resp map[string]interface{}
+				err = json.Unmarshal(body, &resp)
+				if err != nil {
+					color.Red("[%v] Error while Unmarshalling body: %v", time.Now().Format("15:04:05"), err)
+					continue
+				}
+				solvedKey, err = in.SolveCaptcha(resp["captcha_sitekey"].(string))
+				if err != nil {
+					color.Red("[%v] Error while Solving Captcha: %v", time.Now().Format("15:04:05"), err)
+					continue
+				}
+				if i == in.Config.MaxInvite-1 {
+					i--
+				}
+			}
+
+			var Join joinResponse
+			err = json.Unmarshal(body, &Join)
+			if err != nil {
+				color.Red("Error while unmarshalling body %v %v\n", err, string(body))
+				return err
+			}
+			if resp.StatusCode == 200 {
+				color.Green("[%v] %v joint guild", time.Now().Format("15:04:05"), in.Token)
+				if Join.VerificationForm {
+					if len(Join.GuildObj.ID) != 0 {
+						Bypass(in.Client, Join.GuildObj.ID, in.Token, Code)
+					}
+				}
+			}
+			if resp.StatusCode != 200 {
+				color.Red("[%v] %v Failed to join guild %v", time.Now().Format("15:04:05"), resp.StatusCode, string(body))
+			}
+		*/
+		return nil
+
+	}
+	return err
 }
 
 func (b *Bot) CheckServer(guildId string) (int, error) {
@@ -177,19 +275,19 @@ func (b *Bot) GetCookieString() (string, error) {
 	url := "https://discord.com"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		fmt.Printf("[%v] Error while making request to get cookies %v", time.Now().Format("15:04:05"), err)
+		color.Red("[%v] Error while making request to get cookies %v", time.Now().Format("15:04:05"), err)
 		return "", fmt.Errorf("error while making request to get cookie %v", err)
 	}
 
 	res, err := b.Client.Do(req)
 	if err != nil {
-		fmt.Printf("[%v] Error while getting resonse from cookies request %v", time.Now().Format("15:04:05"), err)
+		color.Red("[%v] Error while getting resonse from cookies request %v", time.Now().Format("15:04:05"), err)
 		return "", fmt.Errorf("error while getting resonse from cookie request %v", err)
 	}
 	defer res.Body.Close()
 
 	if res.Cookies() == nil {
-		fmt.Printf("[%v] Error while getting cookies from resonse %v", time.Now().Format("15:04:05"), err)
+		color.Red("[%v] Error while getting cookies from resonse %v", time.Now().Format("15:04:05"), err)
 		return "", fmt.Errorf("there are no cookies in resonse")
 	}
 	var cookies string
@@ -205,18 +303,18 @@ func (b *Bot) GetFingerprintString() (string, error) {
 	url := "https://discord.com/api/v9/experiments"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		fmt.Printf("[%v] Error while making request to get fingerprint %v", time.Now().Format("15:04:05"), err)
+		color.Red("[%v] Error while making request to get fingerprint %v", time.Now().Format("15:04:05"), err)
 		return "", fmt.Errorf("error while making request to get fingerprint %v", err)
 	}
 	res, err := b.Client.Do(headers.Register(req))
 	if err != nil {
-		fmt.Printf("[%v] Error while getting resonse from fingerprint request %v", time.Now().Format("15:04:05"), err)
+		color.Red("[%v] Error while getting resonse from fingerprint request %v", time.Now().Format("15:04:05"), err)
 		return "", fmt.Errorf("error while getting resonse from fingerprint request %v", err)
 	}
 
 	p, err := ReadBody(*res)
 	if err != nil {
-		fmt.Printf("[%v] Error while reading body from fingerprint request %v", time.Now().Format("15:04:05"), err)
+		color.Red("[%v] Error while reading body from fingerprint request %v", time.Now().Format("15:04:05"), err)
 		return "", fmt.Errorf("error while reading body %v", err)
 	}
 
@@ -227,7 +325,7 @@ func (b *Bot) GetFingerprintString() (string, error) {
 	err = json.Unmarshal(p, &Response)
 
 	if err != nil {
-		fmt.Printf("[%v] Error while unmarshalling body from fingerprint request %v", time.Now().Format("15:04:05"), err)
+		color.Red("[%v] Error while unmarshalling body from fingerprint request %v", time.Now().Format("15:04:05"), err)
 		return "", fmt.Errorf("error while unmarshalling resonse from fingerprint request %v", err)
 	}
 
@@ -239,7 +337,7 @@ func (b *Bot) FatalHandler(err error) {
 		b.fatal <- fmt.Errorf("Authentication failed, try using a new token")
 		return
 	}
-	fmt.Printf("Websocket closed %v %v", err, b.Token)
+	color.Red("Websocket closed %v %v", err, b.Token)
 	/* TODO add error handling here, exit if needed
 	in.Ws, err = in.NewConnection(in.wsFatalHandler)
 	if err != nil {

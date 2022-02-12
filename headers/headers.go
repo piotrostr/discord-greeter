@@ -48,12 +48,10 @@ func Register(req *http.Request) *http.Request {
 	return req
 }
 
-func Invite(req *http.Request, cookie string) *http.Request {
+func Invite(req *http.Request) *http.Request {
 	req.Header.Set("Accept-Language", "en-US,en-IN;q=0.9,zh-Hans-CN;q=0.8")
 	req.Header.Set("Connection", "keep-alive")
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Cookie", cookie)
-	// TODO take this param out to the main function
 	req.Header.Set("Origin", "https://discord.com")
 	req.Header.Set("Referer", "https://discord.com/channels/@me")
 	req.Header.Set("Sec-Fetch-Dest", "empty")
