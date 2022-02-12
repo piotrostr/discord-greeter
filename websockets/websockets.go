@@ -199,7 +199,7 @@ func (c *Connection) listen() {
 			for i := 0; i < len(body.Data.Ops); i++ {
 				if body.Data.Ops[i].Op == "SYNC" {
 					for j := 0; j < len(body.Data.Ops[i].Items); j++ {
-						fmt.Println(body.Data.Ops[i].Items[j].Member.User.ID)
+						fmt.Println("new user", body.Data.Ops[i].Items[j].Member.User.ID)
 						c.Members = append(c.Members, body.Data.Ops[i].Items[j].Member.User.ID)
 					}
 				}
