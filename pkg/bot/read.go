@@ -20,7 +20,7 @@ func (b *Bot) ReadMessage() error {
 	ex = filepath.ToSlash(ex)
 	file, err := os.Open(path.Join(path.Dir(ex) + "/" + "message.json"))
 	if err != nil {
-		color.Red("Error while Opening config.json")
+		color.Red("error while opening message.json")
 		return err
 	}
 	defer file.Close()
@@ -43,7 +43,7 @@ func (b *Bot) ReadConfig() error {
 	ex = filepath.ToSlash(ex)
 	file, err := os.Open(path.Join(path.Dir(ex) + "/" + "config.json"))
 	if err != nil {
-		color.Red("Error while Opening config.json")
+		color.Red("error while opening config.json")
 		return err
 	}
 	defer file.Close()
