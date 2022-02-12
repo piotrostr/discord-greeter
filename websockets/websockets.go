@@ -1,21 +1,20 @@
 // Copyright (C) 2021 github.com/dankgrinder & github.com/V4NSH4J
-//
+// slightly edited by github.com/piotrostr
 // This source code has been released under the GNU Affero General Public
 // License v3.0. A copy of this license is available at
 // https://www.gnu.org/licenses/agpl-3.0.en.html
 
-package websocket
+package websockets
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/piotrostr/greeter-dc/bot"
+	"github.com/piotrostr/discord-greeter/bot"
 )
 
 // Define WebSocket connection struct
@@ -35,21 +34,15 @@ type Connection struct {
 }
 
 // Input Discord token and start a new websocket connection
-func (b *bot.Bot) NewConnection(fatalHandler func(err error)) (*Connection, error) {
+func NewConnection(bot *bot.Bot, fatalHandler func(err error)) (*Connection, error) {
 	var dialer websocket.Dialer
-	if in.Proxy == "" {
-		dialer = *websocket.DefaultDialer
-	} else {
-		if !strings.Contains(in.Proxy, "http://") {
-			in.Proxy = "http://" + in.Proxy
-		}
-		proxyURL, err := url.Parse(in.Proxy)
-		if err != nil {
-			return nil, err
-		}
-		dialer = websocket.Dialer{Proxy: http.ProxyURL(proxyURL)}
+
+	proxyURL, err := url.Parse(bot.Proxy)
+	if err != nil {
+		return nil, err
 	}
-	// Dial Connection to Discord
+
+	dialer = websocket.Dialer{Proxy: http.ProxyURL(proxyURL)}
 	ws, _, err := dialer.Dial("wss://gateway.discord.gg/?v=9&encoding=json", nil)
 	if err != nil {
 		return nil, err
@@ -80,7 +73,7 @@ func (b *bot.Bot) NewConnection(fatalHandler func(err error)) (*Connection, erro
 				UserGuildSettingsVersion: -1,
 			},
 			Identify: Identify{
-				Token: in.Token,
+				Token: bot.Token,
 				Properties: Properties{
 					OS:                "Windows",
 					Browser:           "Chrome",
@@ -108,7 +101,7 @@ func (b *bot.Bot) NewConnection(fatalHandler func(err error)) (*Connection, erro
 
 	if err = c.awaitEvent(EventNameReady); err != nil {
 		c.Conn.Close()
-		in.wsFatalHandler(err)
+		bot.FatalHandler(err)
 		return nil, fmt.Errorf("error while waiting for ready event: %v", err)
 	}
 	go c.Ping(time.Duration(interval) * time.Millisecond)
@@ -139,7 +132,6 @@ func (c *Connection) ReadHello() (int, error) {
 }
 
 // Ping Heartbeat interval
-
 func (c *Connection) Ping(interval time.Duration) {
 	go func() {
 		t := time.NewTicker(interval)
@@ -195,6 +187,8 @@ func (c *Connection) listen() {
 				c.OfflineScrape <- b
 			}()
 		}
+
+		// make
 		if body.EventName == "GUILD_MEMBER_LIST_UPDATE" {
 			for i := 0; i < len(body.Data.Ops); i++ {
 				if len(body.Data.Ops[i].Items) == 0 && body.Data.Ops[i].Op == "SYNC" {

@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"os"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 type Config struct {
@@ -20,6 +22,7 @@ type Bot struct {
 	Message Message
 	Client  *http.Client
 	Config  Config
+	fatal   chan error
 }
 
 type Message struct {
@@ -88,4 +91,19 @@ func (b *Bot) Initialize() error {
 	}
 
 	return nil
+}
+
+func (b *Bot) FatalHandler(err error) {
+	if closeErr, ok := err.(*websocket.CloseError); ok && closeErr.Code == 4004 {
+		b.fatal <- fmt.Errorf("Authentication failed, try using a new token")
+		return
+	}
+	fmt.Printf("Websocket closed %v %v", err, b.Token)
+	/* TODO add error handling here, exit if needed
+	in.Ws, err = in.NewConnection(in.wsFatalHandler)
+	if err != nil {
+		b.fatal <- fmt.Errorf("failed to create websocket connection: %s", err)
+		return
+	}
+	*/
 }
