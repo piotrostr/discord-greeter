@@ -3,6 +3,7 @@ package bot
 import (
 	"crypto/tls"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -11,14 +12,27 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func (b *Bot) Initialize() error {
-	b.ReadEnv()
-	b.ReadConfig()
-	b.ReadMessage()
+func (b *Bot) Initialize() {
+	var err error
+
+	err = b.ReadEnv()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = b.ReadConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = b.ReadMessage()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	proxyUrl, err := url.Parse("http://" + b.Proxy)
 	if err != nil {
-		return fmt.Errorf("could not parse proxy: http://%s", b.Proxy)
+		log.Fatal(err)
 	}
 
 	b.Client = &http.Client{
@@ -46,8 +60,6 @@ func (b *Bot) Initialize() error {
 			Proxy:             http.ProxyURL(proxyUrl),
 		},
 	}
-
-	return nil
 }
 
 func (b *Bot) FatalHandler(err error) {

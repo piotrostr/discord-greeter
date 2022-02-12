@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/fatih/color"
 	"github.com/piotrostr/discord-greeter/pkg/bot"
 )
 
@@ -18,8 +19,7 @@ import (
 func main() {
 	bot := bot.Bot{}
 	bot.Initialize()
-
-	fmt.Print("bot initialized with:")
+	color.Blue("bot initialized with:")
 	fmt.Printf("\n\t token: %s ", bot.Token)
 	fmt.Printf("\n\t captcha key: %s", bot.CaptchaKey)
 	fmt.Printf("\n\t invite code: %s", bot.InviteCode)
