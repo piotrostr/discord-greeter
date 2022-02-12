@@ -12,20 +12,11 @@ import (
 	"github.com/piotrostr/discord-greeter/headers"
 )
 
-type Guild struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type JoinResponse struct {
-	VerificationForm bool  `json:"show_verification_form"`
-	GuildObj         Guild `json:"guild"`
-}
-
-func (b *Bot) JoinServer(inviteCode string) error {
+func (b *Bot) JoinServer() error {
 	var solvedKey string
 	var payload invitePayload
 	var err error
+
 	for i := 0; i < b.Config.MaxRejoinAttempts; i++ {
 		if solvedKey == "" || !b.Config.CaptchaSolvingEnabled {
 			payload = invitePayload{}
@@ -40,7 +31,7 @@ func (b *Bot) JoinServer(inviteCode string) error {
 			err = fmt.Errorf("error while marshalling payload %v", err)
 			continue
 		}
-		url := "https://discord.com/api/v9/invites/" + inviteCode
+		url := "https://discord.com/api/v9/invites/" + b.InviteCode
 		req, err := http.NewRequest("POST", url, strings.NewReader(string(payload)))
 		if err != nil {
 			color.Red("Error while making http request %v \n", err)
@@ -94,7 +85,7 @@ func (b *Bot) JoinServer(inviteCode string) error {
 			color.Green("[%v] %v joint guild", time.Now().Format("15:04:05"), b.Token)
 			if Join.VerificationForm {
 				if len(Join.GuildObj.ID) != 0 {
-					Bypass(b.Client, Join.GuildObj.ID, b.Token, inviteCode)
+					Bypass(b.Client, Join.GuildObj.ID, b.Token, b.InviteCode)
 				}
 			}
 		}

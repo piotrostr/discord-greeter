@@ -16,4 +16,7 @@ import (
 func main() {
 	bot := bot.Bot{}
 	bot.Initialize()
+
+	// join server
+	bot.JoinServer()
 }

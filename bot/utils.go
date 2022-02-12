@@ -16,20 +16,6 @@ import (
 	"github.com/piotrostr/discord-greeter/headers"
 )
 
-type bypassInformation struct {
-	Version    string      `json:"version"`
-	FormFields []FormField `json:"form_fields"`
-}
-
-type FormField struct {
-	FieldType   string   `json:"field_type"`
-	Label       string   `json:"label"`
-	Description string   `json:"description"`
-	Required    bool     `json:"required"`
-	Values      []string `json:"values"`
-	Response    bool     `json:"response"`
-}
-
 func (b *Bot) GetCookieString() (string, error) {
 	url := "https://discord.com"
 	req, err := http.NewRequest("GET", url, nil)
