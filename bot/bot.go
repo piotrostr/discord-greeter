@@ -4,39 +4,44 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
+	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/fatih/color"
 	"github.com/gorilla/websocket"
-	"github.com/piotrostr/discord-greeter/headers"
 )
 
 type Config struct {
-	Timeout   int  `json:"timeout,omitempty"`
-	DisableKL bool `json:"disable_kl,omitempty"`
+	Timeout               int  `json:"timeout,omitempty"`
+	DisableKL             bool `json:"disable_kl,omitempty"`
+	CaptchaSolvingEnabled bool `json:"captcha_solving_enabled,omitempty"`
+	MaxRejoinAttempts     int  `json:"max_rejoin_attempts,omitempty"`
 }
 
 type Bot struct {
-	Token   string
-	Proxy   string
-	Message Message
-	Client  *http.Client
-	Config  Config
-	fatal   chan error
+	GuildId    string
+	Token      string
+	Proxy      string
+	Message    Message
+	Client     *http.Client
+	Config     Config
+	CaptchaKey string
+	fatal      chan error
 }
 
 type Message struct {
 	Content string `json:"content,omitempty"`
 	Author  User   `json:"author,omitempty"`
-	GuildID string `json:"guild_id,omitempty"`
+	GuildId string `json:"guild_id,omitempty"`
 }
 
 type User struct {
-	ID            string `json:"id"`
+	Id            string `json:"id"`
 	Username      string `json:"username"`
 	Discriminator string `json:"discriminator"`
 }
@@ -55,18 +60,63 @@ type invitePayload struct {
 	CaptchaKey string `json:"captcha_key,omitempty"`
 }
 
-func (b *Bot) Initialize() error {
-	proxy, proxyExists := os.LookupEnv("PROXY")
-	token, tokenExists := os.LookupEnv("TOKEN")
-	if !(proxyExists || tokenExists) {
-		return fmt.Errorf("proxy or token missing")
+func (b *Bot) ReadConfig() error {
+	ex, err := os.Executable()
+	if err != nil {
+		color.Red("Error while finding executable")
+		return err
 	}
+	ex = filepath.ToSlash(ex)
+	file, err := os.Open(path.Join(path.Dir(ex) + "/" + "config.json"))
+	if err != nil {
+		color.Red("Error while Opening config.json")
+		return err
+	}
+	defer file.Close()
+	bytes, _ := io.ReadAll(file)
+	errr := json.Unmarshal(bytes, &b.Config)
+	if errr != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (b *Bot) ReadEnv() error {
+	proxy, proxyExists := os.LookupEnv("PROXY")
+	if !proxyExists {
+		return fmt.Errorf("proxy missing")
+	}
+
+	token, tokenExists := os.LookupEnv("TOKEN")
+	if !tokenExists {
+		return fmt.Errorf("token missing")
+	}
+
+	guildId, guildIdExists := os.LookupEnv("GUILD")
+	if !guildIdExists {
+		return fmt.Errorf("guildId missing")
+	}
+
+	captchaKey, captchaKeyExists := os.LookupEnv("CAPTCHA_KEY")
+	if !captchaKeyExists {
+		return fmt.Errorf("captchaKey missing")
+	}
+
 	b.Proxy = proxy
 	b.Token = token
+	b.GuildId = guildId
+	b.CaptchaKey = captchaKey
 
-	proxyUrl, err := url.Parse("http://" + proxy)
+	return nil
+}
+
+func (b *Bot) Initialize() error {
+	b.ReadEnv()
+
+	proxyUrl, err := url.Parse("http://" + b.Proxy)
 	if err != nil {
-		return fmt.Errorf("could not parse proxy: http://%s", proxy)
+		return fmt.Errorf("could not parse proxy: http://%s", b.Proxy)
 	}
 
 	b.Client = &http.Client{
@@ -96,132 +146,6 @@ func (b *Bot) Initialize() error {
 	}
 
 	return nil
-}
-
-func (b *Bot) JoinServer(inviteCode string) error {
-	var solvedKey string
-	var payload invitePayload
-	var err error
-	for i := 0; i < b.Config.MaxRejoinAttempts; i++ {
-		if solvedKey == "" || !b.Config.SolveCaptcha {
-			payload = invitePayload{}
-		} else {
-			payload = invitePayload{
-				CaptchaKey: solvedKey,
-			}
-		}
-		payload, err := json.Marshal(payload)
-		if err != nil {
-			color.Red("error while marshalling payload %v", err)
-			err = fmt.Errorf("error while marshalling payload %v", err)
-			continue
-		}
-		url := "https://discord.com/api/v9/invites/" + inviteCode
-		req, err := http.NewRequest("POST", url, strings.NewReader(string(payload)))
-		if err != nil {
-			color.Red("Error while making http request %v \n", err)
-			continue
-		}
-
-		cookie, err := b.GetCookieString()
-		if err != nil {
-			color.Red("[%v] Error while Getting cookies: %v", err)
-			continue
-		}
-		req.Header.Set("Cookie", cookie)
-		req = headers.Invite(req)
-		resp, err := b.Client.Do(req)
-		if err != nil {
-			color.Red("Error while sending HTTP request %v \n", err)
-			continue
-		}
-
-		body, err := ReadBody(*resp)
-		if err != nil {
-			color.Red("Error while reading body %v \n", err)
-			continue
-		}
-		// TODO finish refactor
-		/*
-
-			if strings.Contains(string(body), "captcha_sitekey") {
-				if in.Config.CaptchaAPI == "" {
-					err = fmt.Errorf("[%v] Captcha detected but no API key provided", time.Now().Format("15:04:05"))
-					break
-				} else {
-					color.Green("[%v] Captcha detected, solving...", time.Now().Format("15:04:05"))
-				}
-				var resp map[string]interface{}
-				err = json.Unmarshal(body, &resp)
-				if err != nil {
-					color.Red("[%v] Error while Unmarshalling body: %v", time.Now().Format("15:04:05"), err)
-					continue
-				}
-				solvedKey, err = in.SolveCaptcha(resp["captcha_sitekey"].(string))
-				if err != nil {
-					color.Red("[%v] Error while Solving Captcha: %v", time.Now().Format("15:04:05"), err)
-					continue
-				}
-				if i == in.Config.MaxInvite-1 {
-					i--
-				}
-			}
-
-			var Join joinResponse
-			err = json.Unmarshal(body, &Join)
-			if err != nil {
-				color.Red("Error while unmarshalling body %v %v\n", err, string(body))
-				return err
-			}
-			if resp.StatusCode == 200 {
-				color.Green("[%v] %v joint guild", time.Now().Format("15:04:05"), in.Token)
-				if Join.VerificationForm {
-					if len(Join.GuildObj.ID) != 0 {
-						Bypass(in.Client, Join.GuildObj.ID, in.Token, Code)
-					}
-				}
-			}
-			if resp.StatusCode != 200 {
-				color.Red("[%v] %v Failed to join guild %v", time.Now().Format("15:04:05"), resp.StatusCode, string(body))
-			}
-		*/
-		return nil
-
-	}
-	return err
-}
-
-func (b *Bot) SendFriendRequest(username string, discrim int) (*http.Response, error) {
-	url := "https://discord.com/api/v9/users/@me/relationships"
-	fr := friendRequest{username, discrim}
-	jsonx, err := json.Marshal(&fr)
-	if err != nil {
-		return &http.Response{}, err
-	}
-
-	req, err := http.NewRequest("POST", url, strings.NewReader(string(jsonx)))
-	if err != nil {
-		return &http.Response{}, err
-	}
-	cookie, err := b.GetCookieString()
-	if err != nil {
-		return &http.Response{}, fmt.Errorf("error while getting cookie %v", err)
-	}
-	fingerprint, err := b.GetFingerprintString()
-	if err != nil {
-		return &http.Response{}, fmt.Errorf("error while getting fingerprint %v", err)
-	}
-
-	req.Header.Set("Cookie", cookie)
-	req.Header.Set("X-Fingerprint", fingerprint)
-	req.Header.Set("Authorization", b.Token)
-
-	res, err := b.Client.Do(headers.Common(req))
-	if err != nil {
-		return &http.Response{}, err
-	}
-
-	return res, nil
 }
 
 func (b *Bot) FatalHandler(err error) {

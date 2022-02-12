@@ -1,4 +1,4 @@
-package catpcha
+package captcha
 
 import (
 	"encoding/json"
@@ -15,7 +15,7 @@ import (
 var captchaBaseUrl string = "https://api.capmonster.cloud/"
 
 // Function to use a captcha solving service and return a solved captcha key
-func SolveCaptcha(siteKey string, clientKey string) (string, error) {
+func Solve(siteKey string, clientKey string) (string, error) {
 	jsonx := Payload{
 		ClientKey: clientKey,
 		Task: Task{

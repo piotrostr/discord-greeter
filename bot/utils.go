@@ -14,6 +14,20 @@ import (
 	"github.com/piotrostr/discord-greeter/headers"
 )
 
+type bypassInformation struct {
+	Version    string      `json:"version"`
+	FormFields []FormField `json:"form_fields"`
+}
+
+type FormField struct {
+	FieldType   string   `json:"field_type"`
+	Label       string   `json:"label"`
+	Description string   `json:"description"`
+	Required    bool     `json:"required"`
+	Values      []string `json:"values"`
+	Response    bool     `json:"response"`
+}
+
 func (b *Bot) GetCookieString() (string, error) {
 	url := "https://discord.com"
 	req, err := http.NewRequest("GET", url, nil)
@@ -140,4 +154,67 @@ func ReadBody(resp http.Response) ([]byte, error) {
 		return brbody, nil
 	}
 	return body, nil
+}
+
+func Bypass(client *http.Client, serverid string, token string, invite string) error {
+	// First we require to get all the rules to send in the request
+	site := "https://discord.com/api/v9/guilds/" + serverid + "/member-verification?with_guild=false&invite_code=" + invite
+	req, err := http.NewRequest("GET", site, nil)
+	if err != nil {
+		return err
+	}
+    req = headers.Common(req)
+	req.Header.Add("Authorization", token)
+	resp, err := b.Client.Do(req))
+	if err != nil {
+		return err
+	}
+
+	body, err := ReadBody(*resp)
+	if err != nil {
+		return err
+	}
+
+	var bypassInfo bypassInformation
+	err = json.Unmarshal(body, &bypassInfo)
+	if err != nil {
+		return err
+	}
+
+	// Now we have all the rules, we can send the request along with our response
+	for i := 0; i < len(bypassInfo.FormFields); i++ {
+		// We set the response to true because we accept the terms as the good TOS followers we are
+		bypassInfo.FormFields[i].Response = true
+	}
+
+	jsonData, err := json.Marshal(bypassInfo)
+	if err != nil {
+		return err
+	}
+	url := "https://discord.com/api/v9/guilds/" + serverid + "/requests/@me"
+
+	req, err = http.NewRequest("PUT", url, strings.NewReader(string(jsonData)))
+	if err != nil {
+		color.Red("Error while making http request %v \n", err)
+		return err
+	}
+
+	req.Header.Set("Authorization", token)
+	resp, err = client.Do(CommonHeaders(req))
+	if err != nil {
+		color.Red("Error while sending HTTP request bypass %v \n", err)
+		return err
+	}
+	body, err = ReadBody(*resp)
+	if err != nil {
+		color.Red("[%v] Error while reading body %v \n", time.Now().Format("15:04:05"), err)
+		return err
+	}
+
+	if resp.StatusCode == 201 || resp.StatusCode == 204 {
+		color.Green("[%v] Successfully bypassed token %v", time.Now().Format("15:04:05"), token)
+	} else {
+		color.Red("[%v] Failed to bypass Token %v %v %v", time.Now().Format("15:04:05"), token, resp.StatusCode, string(body))
+	}
+	return nil
 }
