@@ -18,8 +18,12 @@ import (
 func main() {
 	bot := bot.Bot{}
 	bot.Initialize()
-	fmt.Print("bot initialized with: \n %s \n %s")
 
-	// join server
+	fmt.Print("bot initialized with:")
+	fmt.Printf("\n\t token: %s ", bot.Token)
+	fmt.Printf("\n\t captcha key: %s", bot.CaptchaKey)
+	fmt.Printf("\n\t invite code: %s", bot.InviteCode)
+	fmt.Printf("\n\t proxy: %s\n", bot.Proxy)
+
 	bot.JoinServer()
 }

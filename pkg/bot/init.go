@@ -12,7 +12,6 @@ import (
 )
 
 func (b *Bot) Initialize() error {
-	// read in data
 	b.ReadEnv()
 	b.ReadConfig()
 	b.ReadMessage()

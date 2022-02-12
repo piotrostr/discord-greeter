@@ -1,4 +1,3 @@
 #!/usr/bin/env bash
-
-docker kill $(docker ps -q)
-docker run -it -d --rm --env-file env.list bot
+docker build -t bot .
+docker run -it --rm --env-file env.list bot

@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/piotrostr/discord-greeter/bot"
+	"github.com/piotrostr/discord-greeter/pkg/bot"
 )
 
 // Define WebSocket connection struct
