@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/piotrostr/discord-greeter/pkg/bot"
 )
 
@@ -16,6 +18,7 @@ import (
 func main() {
 	bot := bot.Bot{}
 	bot.Initialize()
+	fmt.Print("bot initialized with: \n %s \n %s")
 
 	// join server
 	bot.JoinServer()

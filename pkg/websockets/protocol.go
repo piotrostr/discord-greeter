@@ -7,7 +7,7 @@
 package websockets
 
 import (
-	"github.com/piotrostr/discord-greeter/bot"
+	"github.com/piotrostr/discord-greeter/pkg/bot"
 )
 
 const (
