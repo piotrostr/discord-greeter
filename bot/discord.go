@@ -12,14 +12,14 @@ import (
 	"github.com/piotrostr/discord-greeter/headers"
 )
 
-type guild struct {
+type Guild struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
-type joinResponse struct {
+type JoinResponse struct {
 	VerificationForm bool  `json:"show_verification_form"`
-	GuildObj         guild `json:"guild"`
+	GuildObj         Guild `json:"guild"`
 }
 
 func (b *Bot) JoinServer(inviteCode string) error {
@@ -84,7 +84,7 @@ func (b *Bot) JoinServer(inviteCode string) error {
 				continue
 			}
 		}
-		var Join joinResponse
+		var Join JoinResponse
 		err = json.Unmarshal(body, &Join)
 		if err != nil {
 			color.Red("Error while unmarshalling body %v %v\n", err, string(body))

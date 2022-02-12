@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/andybalholm/brotli"
@@ -163,9 +165,9 @@ func Bypass(client *http.Client, serverid string, token string, invite string) e
 	if err != nil {
 		return err
 	}
-    req = headers.Common(req)
+	req = headers.Common(req)
 	req.Header.Add("Authorization", token)
-	resp, err := b.Client.Do(req))
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -200,7 +202,7 @@ func Bypass(client *http.Client, serverid string, token string, invite string) e
 	}
 
 	req.Header.Set("Authorization", token)
-	resp, err = client.Do(CommonHeaders(req))
+	resp, err = client.Do(headers.Common(req))
 	if err != nil {
 		color.Red("Error while sending HTTP request bypass %v \n", err)
 		return err
@@ -217,4 +219,10 @@ func Bypass(client *http.Client, serverid string, token string, invite string) e
 		color.Red("[%v] Failed to bypass Token %v %v %v", time.Now().Format("15:04:05"), token, resp.StatusCode, string(body))
 	}
 	return nil
+}
+
+func Snowflake() int64 {
+	snowflake := strconv.FormatInt((time.Now().UTC().UnixNano()/1000000)-1420070400000, 2) + "0000000000000000000000"
+	nonce, _ := strconv.ParseInt(snowflake, 2, 64)
+	return nonce
 }

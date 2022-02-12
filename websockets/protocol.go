@@ -6,6 +6,10 @@
 
 package websockets
 
+import (
+	"github.com/piotrostr/discord-greeter/bot"
+)
+
 const (
 	OpcodeDispatch = iota
 	OpcodeHeartbeat
@@ -74,7 +78,7 @@ type Event struct {
 }
 
 type Data struct {
-	Message
+	bot.Message
 	Identify
 	ClientState       ClientState            `json:"client_state,omitempty"`
 	HeartbeatInterval int                    `json:"heartbeat_interval,omitempty"`

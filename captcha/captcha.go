@@ -14,6 +14,31 @@ import (
 
 var captchaBaseUrl string = "https://api.capmonster.cloud/"
 
+type Payload struct {
+	ClientKey string `json:"clientKey"`
+	Task      Task   `json:"task"`
+	ErrorID   int    `json:"ErrorId"`
+	TaskID    int    `json:"taskId"`
+}
+
+type Task struct {
+	Type       string `json:"type"`
+	WebsiteURL string `json:"websiteURL"`
+	WebsiteKey string `json:"websiteKey"`
+	UserAgent  string `json:"userAgent"`
+}
+
+type Response struct {
+	TaskID   int      `json:"taskID"`
+	ErrorID  int      `json:"ErrorId"`
+	Status   string   `json:"status"`
+	Solution Solution `json:"solution"`
+}
+
+type Solution struct {
+	Answer string `json:"gRecaptchaResponse"`
+}
+
 // Function to use a captcha solving service and return a solved captcha key
 func Solve(siteKey string, clientKey string) (string, error) {
 	jsonx := Payload{
@@ -112,29 +137,4 @@ func Solve(siteKey string, clientKey string) (string, error) {
 	default:
 		return "", fmt.Errorf("unknown error [%v]", response.ErrorID)
 	}
-}
-
-type Payload struct {
-	ClientKey string `json:"clientKey"`
-	Task      Task   `json:"task"`
-	ErrorID   int    `json:"ErrorId"`
-	TaskID    int    `json:"taskId"`
-}
-
-type Task struct {
-	Type       string `json:"type"`
-	WebsiteURL string `json:"websiteURL"`
-	WebsiteKey string `json:"websiteKey"`
-	UserAgent  string `json:"userAgent"`
-}
-
-type Response struct {
-	TaskID   int      `json:"taskID"`
-	ErrorID  int      `json:"ErrorId"`
-	Status   string   `json:"status"`
-	Solution Solution `json:"solution"`
-}
-
-type Solution struct {
-	Answer string `json:"gRecaptchaResponse"`
 }
