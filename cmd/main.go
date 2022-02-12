@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/piotrostr/discord-greeter/bot"
+	"github.com/piotrostr/discord-greeter/pkg/bot"
 )
 
 // initialize once per bot

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/piotrostr/discord-greeter/captcha"
-	"github.com/piotrostr/discord-greeter/headers"
+	"github.com/piotrostr/discord-greeter/pkg/captcha"
+	"github.com/piotrostr/discord-greeter/pkg/headers"
 )
 
 func (b *Bot) JoinServer() error {

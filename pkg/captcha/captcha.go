@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/piotrostr/discord-greeter/headers"
+	"github.com/piotrostr/discord-greeter/pkg/headers"
 )
 
 var captchaBaseUrl string = "https://api.capmonster.cloud/"

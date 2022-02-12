@@ -13,7 +13,7 @@ import (
 
 	"github.com/andybalholm/brotli"
 	"github.com/fatih/color"
-	"github.com/piotrostr/discord-greeter/headers"
+	"github.com/piotrostr/discord-greeter/pkg/headers"
 )
 
 func (b *Bot) GetCookieString() (string, error) {
