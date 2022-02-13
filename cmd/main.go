@@ -19,6 +19,7 @@ import (
 func main() {
 	bot := bot.Bot{}
 	bot.Initialize()
+
 	color.Blue("bot initialized with:")
 	fmt.Printf("\n\t token: %s ", bot.Token)
 	fmt.Printf("\n\t captcha key: %s", bot.CaptchaKey)

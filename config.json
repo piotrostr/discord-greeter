@@ -1,23 +1,6 @@
 {
-  "individual_delay": 60,
-  "rate_limit_delay": 650,
-  "offset": 666,
-  "skip_completed": true,
-  "skip_failed": true,
-  "remove_dead_tokens": true,
-  "remove_completed_members": true,
-  "stop_dead_tokens": true,
-  "check_mutual": false,
-  "friend_before_DM": true,
-  "online_tokens": true,
-  "online_scraper_delay": 1000,
-  "call": false,
-  "proxy_from_file": true,
-  "max_dms_per_token": 15,
-  "receive_messages": true,
-  "use_proxy_for_gateway": false,
+  "captcha_solving_enabled": true,
   "timeout": 30,
-  "captcha_api": "capmonster.cloud",
-  "max_attempt_invite_rejoin": 2,
-  "disable_keep_alives": false
+  "max_rejoin_attempts": 2,
+  "disable_kl": false
 }
