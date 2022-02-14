@@ -32,7 +32,10 @@ func (b *Bot) JoinServer() error {
 			continue
 		}
 		url := "https://discord.com/api/v9/invites/" + b.InviteCode
+		fmt.Print(payload)
+		fmt.Print(url)
 		req, err := http.NewRequest("POST", url, strings.NewReader(string(payload)))
+		fmt.Printf("%v+", req)
 		if err != nil {
 			color.Red("Error while making http request %v \n", err)
 			continue

@@ -1,6 +1,3 @@
-[
-  {
-    "content": "Hi <user> join my guilded server https://guilded.gg/tos"
-  }
-]
-
+{
+  "content": "Hi <user> join my guilded server https://guilded.gg/tos"
+}

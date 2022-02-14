@@ -15,7 +15,7 @@ type Bot struct {
 	Token      string
 	Proxy      string
 	InviteCode string
-	Message    Message `json:"message,omitempty"`
+	Message    Message
 	Client     *http.Client
 	Config     Config
 	CaptchaKey string

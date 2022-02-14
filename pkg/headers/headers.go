@@ -14,7 +14,6 @@ JjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==`
 var UserAgent string = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0"
 
 func Common(req *http.Request) *http.Request {
-	req.Header.Set("X-Super-Properties", SuperProperties)
 	req.Header.Set("X-Debug-Options", "bugReporterEnabled")
 	req.Header.Set("X-Discord-Locale", "en-US")
 	req.Header.Set("X-Debug-Options", "bugReporterEnabled")
@@ -25,6 +24,7 @@ func Common(req *http.Request) *http.Request {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", UserAgent)
 	req.Header.Set("TE", "trailers")
+	// req.Header.Set("X-Super-Properties", SuperProperties)
 	return req
 }
 
@@ -41,10 +41,10 @@ func Register(req *http.Request) *http.Request {
 	req.Header.Set("Accept-language", "en-US,en;q=0.9")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", UserAgent)
-	req.Header.Set("X-Super-Properties", SuperProperties)
 	req.Header.Set("Sec-Fetch-Dest", "empty")
 	req.Header.Set("Sec-Fetch-Mode", "cors")
 	req.Header.Set("Sec-Fetch-Site", "same-origin")
+	// req.Header.Set("X-Super-Properties", SuperProperties)
 	return req
 }
 
@@ -60,6 +60,6 @@ func Invite(req *http.Request) *http.Request {
 	req.Header.Set("User-Agent", UserAgent)
 	req.Header.Set("X-Debug-Options", "bugReporterEnabled")
 	req.Header.Set("X-Discord-Locale", "en-US")
-	req.Header.Set("X-Super-Properties", SuperProperties)
+	// req.Header.Set("X-Super-Properties", SuperProperties)
 	return req
 }

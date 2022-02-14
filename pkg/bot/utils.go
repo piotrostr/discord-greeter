@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -96,19 +97,24 @@ func (b *Bot) CheckServer(guildId string) (int, error) {
 	return res.StatusCode, nil
 }
 
-func (b *Bot) CheckToken() int {
+func (b *Bot) CheckToken() {
 	url := "https://discord.com/api/v9/users/@me/affinities/guilds"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return -1
+		log.Fatal(err)
 	}
-	req.Header.Set("authorization", b.Token)
+	req.Header.Set("Authorization", b.Token)
 
 	res, err := b.Client.Do(headers.Common(req))
 	if err != nil {
-		return -1
+		log.Fatal(err)
 	}
-	return res.StatusCode
+
+	if res.StatusCode == 200 {
+		color.Green("token %s valid", b.Token)
+	} else {
+		log.Fatalf("token %s invalid", b.Token)
+	}
 }
 
 func ReadBody(resp http.Response) ([]byte, error) {
